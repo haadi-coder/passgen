@@ -20,11 +20,42 @@ type Generator struct {
 	minSymbols   int
 }
 
-const (
-	upper   = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	lower   = "abcdefghijklmnopqrstuvwxyz"
-	digits  = "0123456789"
-	symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+var (
+	upper = []rune{
+		'A', 'B', 'C', 'D',
+		'E', 'F', 'G', 'H',
+		'I', 'G', 'K', 'L',
+		'M', 'N', 'O', 'P',
+		'Q', 'R', 'S', 'T',
+		'U', 'V', 'W', 'X',
+		'Y', 'Z'}
+
+	lower = []rune{
+		'a', 'b', 'c', 'd',
+		'e', 'f', 'g', 'h',
+		'i', 'j', 'k', 'l',
+		'm', 'n', 'o', 'p',
+		'q', 'r', 's', 't',
+		'u', 'v', 'w', 'x',
+		'y', 'z'}
+
+	digits = []rune{
+		'0', '1',
+		'2', '3',
+		'4', '5',
+		'6', '7',
+		'8', '9',
+	}
+
+	symbols = []rune{
+		'!', '@', '#', '$',
+		'%', '^', '&', '*',
+		'(', ')', '_', '+',
+		'-', '=', '[', ']',
+		'{', '}', '|', ';',
+		':', ',', '.', '<',
+		'>', '?',
+	}
 )
 
 func NewGenerator(opts ...Option) (*Generator, error) {
@@ -57,13 +88,13 @@ func Generate(opts ...Option) (string, error) {
 
 func (g *Generator) Generate() (string, error) {
 	var rawPass strings.Builder
-	var charSets strings.Builder
+	charSets := make([]rune, 0, len(upper)+len(lower)+len(digits)+len(symbols))
 
 	if g.uppercase {
-		charSets.WriteString(upper)
+		charSets = append(charSets, upper...)
 
 		if g.minUppercase > 0 {
-			entry, err := generatePassEntry([]rune(upper), g.minUppercase)
+			entry, err := generatePassEntry(upper, g.minUppercase)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate password entry: %w", err)
 			}
@@ -72,10 +103,10 @@ func (g *Generator) Generate() (string, error) {
 	}
 
 	if g.lowercase {
-		charSets.WriteString(lower)
+		charSets = append(charSets, lower...)
 
 		if g.minLowercase > 0 {
-			entry, err := generatePassEntry([]rune(lower), g.minLowercase)
+			entry, err := generatePassEntry(lower, g.minLowercase)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate password entry: %w", err)
 			}
@@ -84,10 +115,10 @@ func (g *Generator) Generate() (string, error) {
 	}
 
 	if g.digits {
-		charSets.WriteString(digits)
+		charSets = append(charSets, digits...)
 
 		if g.minDigits > 0 {
-			entry, err := generatePassEntry([]rune(digits), g.minDigits)
+			entry, err := generatePassEntry(digits, g.minDigits)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate password entry: %w", err)
 			}
@@ -96,10 +127,10 @@ func (g *Generator) Generate() (string, error) {
 	}
 
 	if g.symbols {
-		charSets.WriteString(symbols)
+		charSets = append(charSets, symbols...)
 
 		if g.minSymbols > 0 {
-			entry, err := generatePassEntry([]rune(symbols), g.minSymbols)
+			entry, err := generatePassEntry(symbols, g.minSymbols)
 			if err != nil {
 				return "", fmt.Errorf("failed to generate password entry: %w", err)
 			}
@@ -110,7 +141,7 @@ func (g *Generator) Generate() (string, error) {
 	remaining := g.length - rawPass.Len()
 
 	if remaining > 0 {
-		entry, err := generatePassEntry([]rune(charSets.String()), remaining)
+		entry, err := generatePassEntry(charSets, remaining)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}

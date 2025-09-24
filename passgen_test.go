@@ -3,6 +3,7 @@ package passgen
 import (
 	"regexp"
 	"runtime"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -332,22 +333,22 @@ func TestGenerate(t *testing.T) {
 				}
 			}
 
-			validChars := ""
+			validChars := []rune{}
 			if tt.expectUppercase {
-				validChars += upper
+				validChars = append(validChars, upper...)
 			}
 			if tt.expectLowercase {
-				validChars += lower
+				validChars = append(validChars, lower...)
 			}
 			if tt.expectDigits {
-				validChars += digits
+				validChars = append(validChars, digits...)
 			}
 			if tt.expectSymbols {
-				validChars += symbols
+				validChars = append(validChars, symbols...)
 			}
 
 			for _, char := range password {
-				if !strings.ContainsRune(validChars, char) {
+				if !slices.Contains(validChars, char) {
 					t.Errorf("password contains unexpected character: %c", char)
 				}
 			}
@@ -763,3 +764,28 @@ func TestMemoryUsage(t *testing.T) {
 // === RUN   BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements-12                 265250              4308 ns/op             784 B/op         15 allocs/op
+
+// #4 После не большой оптимизации Generate. Был переход от строк на руны и ввиду избавления от кросс преобразований аллокации снизились
+// === RUN   BenchmarkGenerate
+// BenchmarkGenerate
+// === RUN   BenchmarkGenerate/default
+// BenchmarkGenerate/default
+// BenchmarkGenerate/default-12              533120              2054 ns/op             464 B/op          6 allocs/op
+// === RUN   BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password-12      1052134              1122 ns/op             432 B/op          5 allocs/op
+// === RUN   BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password-12        161817              7436 ns/op             920 B/op          9 allocs/op
+// === RUN   BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols-12           524682              2031 ns/op             464 B/op          6 allocs/op
+// === RUN   BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only-12          556071              2044 ns/op             464 B/op          6 allocs/op
+// === RUN   BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements-12                404955              2689 ns/op             520 B/op         11 allocs/op
+// === RUN   BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements-12                 285315              4017 ns/op             560 B/op         12 allocs/op
