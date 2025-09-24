@@ -7,19 +7,6 @@ import (
 	"strings"
 )
 
-type Generator struct {
-	length    int
-	uppercase bool
-	lowercase bool
-	digits    bool
-	symbols   bool
-
-	minUppercase int
-	minLowercase int
-	minDigits    int
-	minSymbols   int
-}
-
 var (
 	upper = []rune{
 		'A', 'B', 'C', 'D',
@@ -58,6 +45,19 @@ var (
 	}
 )
 
+type Generator struct {
+	length    int
+	uppercase bool
+	lowercase bool
+	digits    bool
+	symbols   bool
+
+	minUppercase int
+	minLowercase int
+	minDigits    int
+	minSymbols   int
+}
+
 func NewGenerator(opts ...Option) (*Generator, error) {
 	gen := Generator{
 		length:    16,
@@ -88,7 +88,8 @@ func Generate(opts ...Option) (string, error) {
 
 func (g *Generator) Generate() (string, error) {
 	var rawPass strings.Builder
-	charSets := make([]rune, 0, len(upper)+len(lower)+len(digits)+len(symbols))
+	alphabetPower := len(upper) + len(lower) + len(digits) + len(symbols)
+	charSets := make([]rune, 0, alphabetPower)
 
 	if g.uppercase {
 		charSets = append(charSets, upper...)
@@ -177,6 +178,7 @@ func shuffleString(s string) (string, error) {
 	runes := []rune(s)
 	buf := make([]byte, 8)
 
+	// Fisher–Yates shuffle
 	for i := len(runes) - 1; i > 0; i-- {
 		if _, err := rand.Read(buf); err != nil {
 			return "", fmt.Errorf("failed to read random bytes: %w", err)
