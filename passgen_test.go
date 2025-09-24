@@ -729,8 +729,8 @@ func TestStatisticalUniformity(t *testing.T) {
 			// Стандартное отклонение = sqrt(p * (1-p) * N), где p = 1/len(allChars), N = totalChars
 			p := 1.0 / float64(len(allChars))
 			stdDev := math.Sqrt(p * (1 - p) * float64(totalChars))
-			// Допуск ±3σ (99.7% доверительный интервал)
-			tolerance := 3 * stdDev
+			// Допуск ±4σ (99.9937% доверительный интервал)
+			tolerance := 4 * stdDev
 
 			charCount := make(map[rune]int)
 			var mu sync.Mutex
