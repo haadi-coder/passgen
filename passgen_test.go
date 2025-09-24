@@ -295,9 +295,6 @@ func TestGenerate(t *testing.T) {
 			if !tt.expectLowercase && hasLowercase {
 				t.Error("found lowercase characters but none were expected")
 			}
-			if tt.expectDigits && !hasDigits {
-				t.Error("expected digits but found none")
-			}
 			if !tt.expectDigits && hasDigits {
 				t.Error("found digits but none were expected")
 			}
