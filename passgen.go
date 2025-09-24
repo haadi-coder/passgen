@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"fmt"
-	"math/big"
 	"strings"
 )
 
@@ -129,14 +128,15 @@ func (g *Generator) Generate() (string, error) {
 func generatePassEntry(alphabet []rune, count int) (string, error) {
 	var sb strings.Builder
 
-	infig := big.NewInt(int64(len(alphabet)))
+	alphabetLen := uint64(len(alphabet))
+	buf := make([]byte, 8)
 
-	for range int(count) {
-		idx, err := rand.Int(rand.Reader, infig)
-		if err != nil {
-			return "", fmt.Errorf("failed to generate random index: %w", err)
+	for range count {
+		if _, err := rand.Read(buf); err != nil {
+			return "", fmt.Errorf("failed to read random bytes: %w", err)
 		}
-		sb.WriteRune(alphabet[idx.Int64()])
+		idx := binary.LittleEndian.Uint64(buf) % alphabetLen
+		sb.WriteRune(alphabet[idx])
 	}
 
 	return sb.String(), nil

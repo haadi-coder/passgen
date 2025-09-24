@@ -721,7 +721,6 @@ func TestMemoryUsage(t *testing.T) {
 // BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements-12                  94597             12355 ns/op            3848 B/op        206 allocs/op
 
-
 // #2 После использования в shuffle буфферезированные значения
 // BenchmarkGenerate/default
 // BenchmarkGenerate/default-12              258638              4468 ns/op            1456 B/op         57 allocs/op
@@ -743,3 +742,24 @@ func TestMemoryUsage(t *testing.T) {
 // === RUN   BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements-12                 136867              8533 ns/op            2320 B/op        111
+
+// #3 После изменения generatePassEntry
+// BenchmarkGenerate/default-12              502628              2309 ns/op             688 B/op          9 allocs/op
+// === RUN   BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password-12       804098              1387 ns/op             656 B/op          8 allocs/op
+// === RUN   BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password-12        154750              7787 ns/op            1144 B/op         12 allocs/op
+// === RUN   BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols-12           498453              2174 ns/op             464 B/op          8 allocs/op
+// === RUN   BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only-12          569515              1949 ns/op             128 B/op          6 allocs/op
+// === RUN   BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements-12                374904              2951 ns/op             744 B/op         14 allocs/op
+// === RUN   BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements-12                 265250              4308 ns/op             784 B/op         15 allocs/op
