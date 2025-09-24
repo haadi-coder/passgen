@@ -721,3 +721,25 @@ func TestMemoryUsage(t *testing.T) {
 // BenchmarkGenerate/complex_requirements
 // BenchmarkGenerate/complex_requirements-12                  94597             12355 ns/op            3848 B/op        206 allocs/op
 
+
+// #2 После использования в shuffle буфферезированные значения
+// BenchmarkGenerate/default
+// BenchmarkGenerate/default-12              258638              4468 ns/op            1456 B/op         57 allocs/op
+// === RUN   BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password
+// BenchmarkGenerate/short_password-12       459564              2454 ns/op            1040 B/op         32 allocs/op
+// === RUN   BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password
+// BenchmarkGenerate/long_password-12         74122             16029 ns/op            4216 B/op        204 allocs/op
+// === RUN   BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols
+// BenchmarkGenerate/no_symbols-12           293736              3907 ns/op            1232 B/op         56 allocs/op
+// === RUN   BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only
+// BenchmarkGenerate/digits_only-12          269953              4248 ns/op             896 B/op         54 allocs/op
+// === RUN   BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements
+// BenchmarkGenerate/with_min_requirements-12                212169              5559 ns/op            1704 B/op         74 allocs/op
+// === RUN   BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements
+// BenchmarkGenerate/complex_requirements-12                 136867              8533 ns/op            2320 B/op        111

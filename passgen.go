@@ -2,6 +2,7 @@ package passgen
 
 import (
 	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"strings"
@@ -143,14 +144,15 @@ func generatePassEntry(alphabet []rune, count int) (string, error) {
 
 func shuffleString(s string) (string, error) {
 	runes := []rune(s)
+	buf := make([]byte, 8)
 
-	for i := range runes {
-		j, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
-		if err != nil {
-			return "", fmt.Errorf("failed to generate random index to shuffle: %w", err)
+	for i := len(runes) - 1; i > 0; i-- {
+		if _, err := rand.Read(buf); err != nil {
+			return "", fmt.Errorf("failed to read random bytes: %w", err)
 		}
 
-		runes[i], runes[j.Int64()] = runes[j.Int64()], runes[i]
+		j := int(binary.LittleEndian.Uint64(buf) % uint64(i+1))
+		runes[i], runes[j] = runes[j], runes[i]
 	}
 
 	return string(runes), nil
