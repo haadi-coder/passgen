@@ -1,6 +1,7 @@
 package passgen
 
 import (
+	"math"
 	"regexp"
 	"slices"
 	"strings"
@@ -666,93 +667,117 @@ func BenchmarkGenerate(b *testing.B) {
 	}
 }
 
-// #1
-// === RUN   BenchmarkGenerate/default
-// BenchmarkGenerate/default
-// BenchmarkGenerate/default-12              186519              6163 ns/op            2216 B/op        104 allocs/op
-// === RUN   BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password-12       349222              3333 ns/op            1408 B/op         55 allocs/op
-// === RUN   BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password-12         50288             23632 ns/op            7280 B/op        395 allocs/op
-// === RUN   BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols-12           204147              5624 ns/op            1992 B/op        103 allocs/op
-// === RUN   BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only-12          199051              6055 ns/op            1656 B/op        101 allocs/op
-// === RUN   BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements-12                134268              8073 ns/op            2656 B/op        133 allocs/op
-// === RUN   BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements-12                  94597             12355 ns/op            3848 B/op        206 allocs/op
+func TestStatisticalUniformity(t *testing.T) {
+	tests := []struct {
+		name           string
+		options        []Option
+		expectedLength int
+		charSets       [][]rune
+	}{
+		{
+			name:           "default configuration",
+			options:        nil,
+			expectedLength: 16,
+			charSets:       [][]rune{upper, lower, digits, symbols},
+		},
+		{
+			name:           "only uppercase",
+			options:        []Option{WithLength(12), WithoutLowercase(), WithoutDigits(), WithoutSymbols()},
+			expectedLength: 12,
+			charSets:       [][]rune{upper},
+		},
+		{
+			name:           "only lowercase",
+			options:        []Option{WithLength(12), WithoutUppercase(), WithoutDigits(), WithoutSymbols()},
+			expectedLength: 12,
+			charSets:       [][]rune{lower},
+		},
+		{
+			name:           "only digits",
+			options:        []Option{WithLength(6), WithoutUppercase(), WithoutLowercase(), WithoutSymbols()},
+			expectedLength: 6,
+			charSets:       [][]rune{digits},
+		},
+		{
+			name:           "only symbols",
+			options:        []Option{WithLength(8), WithoutUppercase(), WithoutLowercase(), WithoutDigits()},
+			expectedLength: 8,
+			charSets:       [][]rune{symbols},
+		},
+	}
 
-// #2 После использования в shuffle буфферезированные значения
-// BenchmarkGenerate/default
-// BenchmarkGenerate/default-12              258638              4468 ns/op            1456 B/op         57 allocs/op
-// === RUN   BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password-12       459564              2454 ns/op            1040 B/op         32 allocs/op
-// === RUN   BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password-12         74122             16029 ns/op            4216 B/op        204 allocs/op
-// === RUN   BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols-12           293736              3907 ns/op            1232 B/op         56 allocs/op
-// === RUN   BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only-12          269953              4248 ns/op             896 B/op         54 allocs/op
-// === RUN   BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements-12                212169              5559 ns/op            1704 B/op         74 allocs/op
-// === RUN   BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements-12                 136867              8533 ns/op            2320 B/op        111
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gen, err := NewGenerator(tt.options...)
+			if err != nil {
+				t.Fatalf("failed to create generator: %v", err)
+			}
 
-// #3 После изменения generatePassEntry
-// BenchmarkGenerate/default-12              502628              2309 ns/op             688 B/op          9 allocs/op
-// === RUN   BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password-12       804098              1387 ns/op             656 B/op          8 allocs/op
-// === RUN   BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password-12        154750              7787 ns/op            1144 B/op         12 allocs/op
-// === RUN   BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols-12           498453              2174 ns/op             464 B/op          8 allocs/op
-// === RUN   BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only-12          569515              1949 ns/op             128 B/op          6 allocs/op
-// === RUN   BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements-12                374904              2951 ns/op             744 B/op         14 allocs/op
-// === RUN   BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements-12                 265250              4308 ns/op             784 B/op         15 allocs/op
+			var allChars []rune
+			for _, charSet := range tt.charSets {
+				allChars = append(allChars, charSet...)
+			}
+			if len(allChars) == 0 {
+				t.Fatal("no characters available for testing")
+			}
 
-// #4 После не большой оптимизации Generate. Был переход от строк на руны и ввиду избавления от кросс преобразований аллокации снизились
-// === RUN   BenchmarkGenerate
-// BenchmarkGenerate
-// === RUN   BenchmarkGenerate/default
-// BenchmarkGenerate/default
-// BenchmarkGenerate/default-12              533120              2054 ns/op             464 B/op          6 allocs/op
-// === RUN   BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password
-// BenchmarkGenerate/short_password-12      1052134              1122 ns/op             432 B/op          5 allocs/op
-// === RUN   BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password
-// BenchmarkGenerate/long_password-12        161817              7436 ns/op             920 B/op          9 allocs/op
-// === RUN   BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols
-// BenchmarkGenerate/no_symbols-12           524682              2031 ns/op             464 B/op          6 allocs/op
-// === RUN   BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only
-// BenchmarkGenerate/digits_only-12          556071              2044 ns/op             464 B/op          6 allocs/op
-// === RUN   BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements
-// BenchmarkGenerate/with_min_requirements-12                404955              2689 ns/op             520 B/op         11 allocs/op
-// === RUN   BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements
-// BenchmarkGenerate/complex_requirements-12                 285315              4017 ns/op             560 B/op         12 allocs/op
+			const numPasswords = 10000
+			totalChars := numPasswords * tt.expectedLength
+			// Ожидаемая частота для каждого символа
+			expectedFreq := float64(totalChars) / float64(len(allChars))
+			// Допуск: 3 стандартных отклонения для биномиального распределения
+			// Стандартное отклонение = sqrt(p * (1-p) * N), где p = 1/len(allChars), N = totalChars
+			p := 1.0 / float64(len(allChars))
+			stdDev := math.Sqrt(p * (1 - p) * float64(totalChars))
+			// Допуск ±3σ (99.7% доверительный интервал)
+			tolerance := 3 * stdDev
+
+			charCount := make(map[rune]int)
+			var mu sync.Mutex
+			var wg sync.WaitGroup
+
+			// Генерируем пароли конкурентно
+			for i := 0; i < numPasswords; i++ {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					password, err := gen.Generate()
+					if err != nil {
+						t.Errorf("failed to generate password: %v", err)
+						return
+					}
+					if len(password) != tt.expectedLength {
+						t.Errorf("expected length %d, got %d", tt.expectedLength, len(password))
+						return
+					}
+
+					mu.Lock()
+					for _, char := range password {
+						if slices.Contains(allChars, char) {
+							charCount[char]++
+						} else {
+							t.Errorf("unexpected character %c in password", char)
+						}
+					}
+					mu.Unlock()
+				}()
+			}
+			wg.Wait()
+
+			// Проверяем частоту каждого символа
+			for _, char := range allChars {
+				count := float64(charCount[char])
+				if math.Abs(count-expectedFreq) > tolerance {
+					t.Errorf("character %c has frequency %v, expected %v ± %v", char, count, expectedFreq, tolerance)
+				}
+			}
+
+			// Проверяем, что все ожидаемые символы присутствуют
+			for _, char := range allChars {
+				if _, exists := charCount[char]; !exists {
+					t.Errorf("character %c was not generated at all", char)
+				}
+			}
+		})
+	}
+}
