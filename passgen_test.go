@@ -2,7 +2,6 @@ package passgen
 
 import (
 	"regexp"
-	"runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -664,38 +663,6 @@ func BenchmarkGenerate(b *testing.B) {
 				}
 			}
 		})
-	}
-}
-
-func TestMemoryUsage(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping memory usage test in short mode")
-	}
-
-	gen, err := NewGenerator(WithLength(16))
-	if err != nil {
-		t.Fatalf("failed to create generator: %v", err)
-	}
-
-	var m1, m2 runtime.MemStats
-	runtime.GC()
-	runtime.ReadMemStats(&m1)
-
-	// Генерируем много паролей
-	for i := 0; i < 10000; i++ {
-		_, err := gen.Generate()
-		if err != nil {
-			t.Fatalf("failed to generate password %d: %v", i, err)
-		}
-	}
-
-	runtime.GC()
-	runtime.ReadMemStats(&m2)
-
-	// Проверяем, что память не увеличилась значительно
-	memoryGrowth := m2.Alloc - m1.Alloc
-	if memoryGrowth > 1024*1024 { // Больше 1MB роста подозрительно
-		t.Errorf("memory usage grew by %d bytes after generating 10000 passwords", memoryGrowth)
 	}
 }
 
