@@ -43,35 +43,39 @@ var (
 		':', ',', '.', '<',
 		'>', '?',
 	}
+
+	alphabetPower = len(upper) + len(lower) + len(digits) + len(symbols)
 )
 
 type Generator struct {
-	length    int
-	uppercase bool
-	lowercase bool
-	digits    bool
-	symbols   bool
-
-	minUppercase int
-	minLowercase int
-	minDigits    int
-	minSymbols   int
+	config         *config
+	availableChars []rune
 }
 
 func NewGenerator(opts ...Option) (*Generator, error) {
 	gen := Generator{
-		length:    16,
-		uppercase: true,
-		lowercase: true,
-		digits:    true,
-		symbols:   true,
+		config:         defaultConfig(),
+		availableChars: make([]rune, 0, alphabetPower),
 	}
 	for _, opt := range opts {
-		opt(&gen)
+		opt(gen.config)
 	}
 
-	if err := gen.validate(); err != nil {
+	if err := gen.config.validate(); err != nil {
 		return nil, fmt.Errorf("failed to create new generator: %w", err)
+	}
+
+	if gen.config.uppercase {
+		gen.availableChars = append(gen.availableChars, upper...)
+	}
+	if gen.config.lowercase {
+		gen.availableChars = append(gen.availableChars, lower...)
+	}
+	if gen.config.digits {
+		gen.availableChars = append(gen.availableChars, digits...)
+	}
+	if gen.config.symbols {
+		gen.availableChars = append(gen.availableChars, symbols...)
 	}
 
 	return &gen, nil
@@ -88,61 +92,44 @@ func Generate(opts ...Option) (string, error) {
 
 func (g *Generator) Generate() (string, error) {
 	var rawPass strings.Builder
-	alphabetPower := len(upper) + len(lower) + len(digits) + len(symbols)
-	charSets := make([]rune, 0, alphabetPower)
+	cfg := g.config
 
-	if g.uppercase {
-		charSets = append(charSets, upper...)
-
-		if g.minUppercase > 0 {
-			entry, err := generatePassEntry(upper, g.minUppercase)
-			if err != nil {
-				return "", fmt.Errorf("failed to generate password entry: %w", err)
-			}
-			rawPass.WriteString(entry)
+	if cfg.minUppercase > 0 {
+		entry, err := generatePassEntry(upper, cfg.minUppercase)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+		rawPass.WriteString(entry)
 	}
 
-	if g.lowercase {
-		charSets = append(charSets, lower...)
-
-		if g.minLowercase > 0 {
-			entry, err := generatePassEntry(lower, g.minLowercase)
-			if err != nil {
-				return "", fmt.Errorf("failed to generate password entry: %w", err)
-			}
-			rawPass.WriteString(entry)
+	if cfg.minLowercase > 0 {
+		entry, err := generatePassEntry(lower, cfg.minLowercase)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+		rawPass.WriteString(entry)
 	}
 
-	if g.digits {
-		charSets = append(charSets, digits...)
-
-		if g.minDigits > 0 {
-			entry, err := generatePassEntry(digits, g.minDigits)
-			if err != nil {
-				return "", fmt.Errorf("failed to generate password entry: %w", err)
-			}
-			rawPass.WriteString(entry)
+	if cfg.minDigits > 0 {
+		entry, err := generatePassEntry(digits, cfg.minDigits)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+		rawPass.WriteString(entry)
 	}
 
-	if g.symbols {
-		charSets = append(charSets, symbols...)
-
-		if g.minSymbols > 0 {
-			entry, err := generatePassEntry(symbols, g.minSymbols)
-			if err != nil {
-				return "", fmt.Errorf("failed to generate password entry: %w", err)
-			}
-			rawPass.WriteString(entry)
+	if cfg.minSymbols > 0 {
+		entry, err := generatePassEntry(symbols, cfg.minSymbols)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+		rawPass.WriteString(entry)
 	}
 
-	remaining := g.length - rawPass.Len()
+	remaining := cfg.length - rawPass.Len()
 
 	if remaining > 0 {
-		entry, err := generatePassEntry(charSets, remaining)
+		entry, err := generatePassEntry(g.availableChars, remaining)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
