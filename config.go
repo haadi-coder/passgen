@@ -3,11 +3,12 @@ package passgen
 import "fmt"
 
 type config struct {
-	length    int
-	uppercase bool
-	lowercase bool
-	digits    bool
-	symbols   bool
+	length int
+
+	useUppercase bool
+	useLowercase bool
+	useDigits    bool
+	useSymbols   bool
 
 	minUppercase int
 	minLowercase int
@@ -17,11 +18,11 @@ type config struct {
 
 func defaultConfig() *config {
 	return &config{
-		length:    16,
-		uppercase: true,
-		lowercase: true,
-		digits:    true,
-		symbols:   true,
+		length:       16,
+		useUppercase: true,
+		useLowercase: true,
+		useDigits:    true,
+		useSymbols:   true,
 	}
 }
 
@@ -46,20 +47,20 @@ func (c *config) validate() error {
 		return fmt.Errorf("minimum symbols count cannot be negative, got %d", c.minSymbols)
 	}
 
-	if !c.uppercase && !c.lowercase && !c.digits && !c.symbols {
+	if !c.useUppercase && !c.useLowercase && !c.useDigits && !c.useSymbols {
 		return fmt.Errorf("at least one character set must be enabled")
 	}
 
-	if !c.uppercase && c.minUppercase > 0 {
+	if !c.useUppercase && c.minUppercase > 0 {
 		return fmt.Errorf("uppercase characters are disabled but minimum uppercase requirement is %d", c.minUppercase)
 	}
-	if !c.lowercase && c.minLowercase > 0 {
+	if !c.useLowercase && c.minLowercase > 0 {
 		return fmt.Errorf("lowercase characters are disabled but minimum lowercase requirement is %d", c.minLowercase)
 	}
-	if !c.digits && c.minDigits > 0 {
+	if !c.useDigits && c.minDigits > 0 {
 		return fmt.Errorf("digits are disabled but minimum digits requirement is %d", c.minDigits)
 	}
-	if !c.symbols && c.minSymbols > 0 {
+	if !c.useSymbols && c.minSymbols > 0 {
 		return fmt.Errorf("symbols are disabled but minimum symbols requirement is %d", c.minSymbols)
 	}
 

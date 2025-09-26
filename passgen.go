@@ -8,16 +8,17 @@ import (
 )
 
 var (
-	upper = []rune{
+	uppers = []rune{
 		'A', 'B', 'C', 'D',
 		'E', 'F', 'G', 'H',
 		'I', 'J', 'K', 'L',
 		'M', 'N', 'O', 'P',
 		'Q', 'R', 'S', 'T',
 		'U', 'V', 'W', 'X',
-		'Y', 'Z'}
+		'Y', 'Z',
+	}
 
-	lower = []rune{
+	lowers = []rune{
 		'a', 'b', 'c', 'd',
 		'e', 'f', 'g', 'h',
 		'i', 'j', 'k', 'l',
@@ -44,38 +45,38 @@ var (
 		'>', '?',
 	}
 
-	alphabetPower = len(upper) + len(lower) + len(digits) + len(symbols)
+	charsLength = len(uppers) + len(lowers) + len(digits) + len(symbols)
 )
 
 type Generator struct {
-	config         *config
-	availableChars []rune
+	cfg     *config
+	charset []rune
 }
 
 func NewGenerator(opts ...Option) (*Generator, error) {
 	gen := Generator{
-		config:         defaultConfig(),
-		availableChars: make([]rune, 0, alphabetPower),
+		cfg:     defaultConfig(),
+		charset: make([]rune, 0, charsLength),
 	}
 	for _, opt := range opts {
-		opt(gen.config)
+		opt(gen.cfg)
 	}
 
-	if err := gen.config.validate(); err != nil {
-		return nil, fmt.Errorf("failed to create new generator: %w", err)
+	if err := gen.cfg.validate(); err != nil {
+		return nil, fmt.Errorf("failed to validate generator: %w", err)
 	}
 
-	if gen.config.uppercase {
-		gen.availableChars = append(gen.availableChars, upper...)
+	if gen.cfg.useUppercase {
+		gen.charset = append(gen.charset, uppers...)
 	}
-	if gen.config.lowercase {
-		gen.availableChars = append(gen.availableChars, lower...)
+	if gen.cfg.useLowercase {
+		gen.charset = append(gen.charset, lowers...)
 	}
-	if gen.config.digits {
-		gen.availableChars = append(gen.availableChars, digits...)
+	if gen.cfg.useDigits {
+		gen.charset = append(gen.charset, digits...)
 	}
-	if gen.config.symbols {
-		gen.availableChars = append(gen.availableChars, symbols...)
+	if gen.cfg.useSymbols {
+		gen.charset = append(gen.charset, symbols...)
 	}
 
 	return &gen, nil
@@ -84,7 +85,7 @@ func NewGenerator(opts ...Option) (*Generator, error) {
 func Generate(opts ...Option) (string, error) {
 	gen, err := NewGenerator(opts...)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate: %w", err)
+		return "", fmt.Errorf("failed to create new generator: %w", err)
 	}
 
 	return gen.Generate()
@@ -92,10 +93,10 @@ func Generate(opts ...Option) (string, error) {
 
 func (g *Generator) Generate() (string, error) {
 	var rawPass strings.Builder
-	cfg := g.config
+	cfg := g.cfg
 
 	if cfg.minUppercase > 0 {
-		entry, err := generatePassEntry(upper, cfg.minUppercase)
+		entry, err := generatePassEntry(uppers, cfg.minUppercase)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
@@ -103,7 +104,7 @@ func (g *Generator) Generate() (string, error) {
 	}
 
 	if cfg.minLowercase > 0 {
-		entry, err := generatePassEntry(lower, cfg.minLowercase)
+		entry, err := generatePassEntry(lowers, cfg.minLowercase)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
@@ -129,7 +130,7 @@ func (g *Generator) Generate() (string, error) {
 	remaining := cfg.length - rawPass.Len()
 
 	if remaining > 0 {
-		entry, err := generatePassEntry(g.availableChars, remaining)
+		entry, err := generatePassEntry(g.charset, remaining)
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
@@ -144,18 +145,16 @@ func (g *Generator) Generate() (string, error) {
 	return pass, nil
 }
 
-func generatePassEntry(alphabet []rune, count int) (string, error) {
+func generatePassEntry(charset []rune, count int) (string, error) {
 	var sb strings.Builder
-
-	alphabetLen := uint64(len(alphabet))
 	buf := make([]byte, 8)
 
 	for range count {
 		if _, err := rand.Read(buf); err != nil {
 			return "", fmt.Errorf("failed to read random bytes: %w", err)
 		}
-		idx := binary.LittleEndian.Uint64(buf) % alphabetLen
-		sb.WriteRune(alphabet[idx])
+		idx := binary.LittleEndian.Uint64(buf) % uint64(len(charset))
+		sb.WriteRune(charset[idx])
 	}
 
 	return sb.String(), nil

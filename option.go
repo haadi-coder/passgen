@@ -8,51 +8,51 @@ func WithLength(n int) Option {
 	}
 }
 
-func WithUpperCase() Option {
+func WithUppercase() Option {
 	return func(c *config) {
-		c.uppercase = true
+		c.useUppercase = true
 	}
 }
 
 func WithoutUppercase() Option {
 	return func(c *config) {
-		c.uppercase = false
+		c.useUppercase = false
 	}
 }
 
 func WithLowercase() Option {
 	return func(c *config) {
-		c.lowercase = true
+		c.useLowercase = true
 	}
 }
 
 func WithoutLowercase() Option {
 	return func(c *config) {
-		c.lowercase = false
+		c.useLowercase = false
 	}
 }
 
 func WithDigits() Option {
 	return func(c *config) {
-		c.digits = true
+		c.useDigits = true
 	}
 }
 
 func WithoutDigits() Option {
 	return func(c *config) {
-		c.digits = false
+		c.useDigits = false
 	}
 }
 
 func WithSymbols() Option {
 	return func(c *config) {
-		c.symbols = true
+		c.useSymbols = true
 	}
 }
 
 func WithoutSymbols() Option {
 	return func(c *config) {
-		c.symbols = false
+		c.useSymbols = false
 	}
 }
 
