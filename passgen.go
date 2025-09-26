@@ -54,7 +54,6 @@ type Generator struct {
 }
 
 func NewGenerator(opts ...Option) (*Generator, error) {
-	charset := make([]rune, 0, charsLength)
 	cfg := defaultConfig()
 
 	for _, opt := range opts {
@@ -65,6 +64,7 @@ func NewGenerator(opts ...Option) (*Generator, error) {
 		return nil, fmt.Errorf("failed to validate generator: %w", err)
 	}
 
+	charset := make([]rune, 0, charsLength)
 	if cfg.useUppercase {
 		charset = append(charset, uppers...)
 	}
@@ -79,8 +79,8 @@ func NewGenerator(opts ...Option) (*Generator, error) {
 	}
 
 	return &Generator{
-		charset: charset,
 		cfg:     cfg,
+		charset: charset,
 	}, nil
 }
 
