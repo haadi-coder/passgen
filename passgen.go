@@ -54,32 +54,34 @@ type Generator struct {
 }
 
 func NewGenerator(opts ...Option) (*Generator, error) {
-	gen := Generator{
-		cfg:     defaultConfig(),
-		charset: make([]rune, 0, charsLength),
-	}
+	charset := make([]rune, 0, charsLength)
+	cfg := defaultConfig()
+
 	for _, opt := range opts {
-		opt(gen.cfg)
+		opt(cfg)
 	}
 
-	if err := gen.cfg.validate(); err != nil {
+	if err := cfg.validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate generator: %w", err)
 	}
 
-	if gen.cfg.useUppercase {
-		gen.charset = append(gen.charset, uppers...)
+	if cfg.useUppercase {
+		charset = append(charset, uppers...)
 	}
-	if gen.cfg.useLowercase {
-		gen.charset = append(gen.charset, lowers...)
+	if cfg.useLowercase {
+		charset = append(charset, lowers...)
 	}
-	if gen.cfg.useDigits {
-		gen.charset = append(gen.charset, digits...)
+	if cfg.useDigits {
+		charset = append(charset, digits...)
 	}
-	if gen.cfg.useSymbols {
-		gen.charset = append(gen.charset, symbols...)
+	if cfg.useSymbols {
+		charset = append(charset, symbols...)
 	}
 
-	return &gen, nil
+	return &Generator{
+		charset: charset,
+		cfg:     cfg,
+	}, nil
 }
 
 func Generate(opts ...Option) (string, error) {
@@ -100,6 +102,7 @@ func (g *Generator) Generate() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+
 		rawPass.WriteString(entry)
 	}
 
@@ -108,6 +111,7 @@ func (g *Generator) Generate() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+
 		rawPass.WriteString(entry)
 	}
 
@@ -116,6 +120,7 @@ func (g *Generator) Generate() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+
 		rawPass.WriteString(entry)
 	}
 
@@ -124,6 +129,7 @@ func (g *Generator) Generate() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+
 		rawPass.WriteString(entry)
 	}
 
@@ -134,6 +140,7 @@ func (g *Generator) Generate() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to generate password entry: %w", err)
 		}
+
 		rawPass.WriteString(entry)
 	}
 
@@ -153,6 +160,7 @@ func generatePassEntry(charset []rune, count int) (string, error) {
 		if _, err := rand.Read(buf); err != nil {
 			return "", fmt.Errorf("failed to read random bytes: %w", err)
 		}
+
 		idx := binary.LittleEndian.Uint64(buf) % uint64(len(charset))
 		sb.WriteRune(charset[idx])
 	}
